@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Todo App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      height: fit-content;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #1a1a2e;
+      margin-bottom: 24px;
+      text-align: center;
+      letter-spacing: -0.5px;
+    }
+
+    .add-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .add-form input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      id: "todo-input";
+    }
+
+    .add-form input:focus { border-color: #4f46e5; }
+
+    .add-form button {
+      padding: 10px 20px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      id: "add-btn";
+    }
+
+    .add-form button:hover { background: #4338ca; }
+
+    .todo-list { list-style: none; }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background 0.15s;
+      border-radius: 6px;
+    }
+
+    .todo-item:hover { background: #fafafa; }
+
+    .todo-item span {
+      flex: 1;
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    .todo-item span.done {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+
+    .btn-toggle, .btn-delete {
+      padding: 5px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-toggle {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .btn-toggle:hover { background: #bae6fd; }
+
+    .btn-delete {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .btn-delete:hover { background: #fecaca; }
+
+    .empty {
+      text-align: center;
+      color: #bbb;
+      font-size: 0.9rem;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Todo List</h1>
+
+    <form class="add-form" action="/add" method="POST">
+      <input type="text" name="title" id="todo-input" placeholder="Add a new task..." required />
+      <button type="submit" id="add-btn">Add</button>
+    </form>
+
+    {% if todos %}
+    <ul class="todo-list">
+      {% for todo in todos %}
+      <li class="todo-item" id="todo-{{ todo.id }}">
+        <span class="{{ 'done' if todo.done else '' }}">{{ todo.title }}</span>
+        <a class="btn-toggle" href="/toggle/{{ todo.id }}">
+          {{ '↩ Undo' if todo.done else '✓ Done' }}
+        </a>
+        <a class="btn-delete" href="/delete/{{ todo.id }}">🗑 Delete</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">No tasks yet. Add one above!</p>
+    {% endif %}
+  </div>
+</body>
+</html>
