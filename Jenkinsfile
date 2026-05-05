@@ -80,6 +80,7 @@ pipeline {
                 echo "Sending to: ${pusherEmail}"
 
                 emailext(
+                    from: "shuja782@gmail.com",
                     to: "${pusherEmail}",
                     subject: "[Jenkins] ${jobName} #${buildNum} - ${buildStatus}",
                     body: """
