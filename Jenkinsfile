@@ -74,13 +74,13 @@ pipeline {
                 ).trim()
 
                 if (!pusherEmail.contains('@') || pusherEmail.contains('.internal')) {
-                    pusherEmail = "shuja782@gmail.com"
+                    pusherEmail = "shujaali782@gmail.com"
                 }
 
                 echo "Sending to: ${pusherEmail}"
 
                 emailext(
-                    from: "shuja782@gmail.com",
+                    from: "shujaali782@gmail.com",
                     to: "${pusherEmail}",
                     subject: "[Jenkins] ${jobName} #${buildNum} - ${buildStatus}",
                     body: """
@@ -96,7 +96,6 @@ pipeline {
                     attachmentsPattern: 'test-results/test-results.xml'
                 )
             }
-            sh 'docker-compose down || true'
         }
     }
 }
