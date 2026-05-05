@@ -21,8 +21,8 @@ pipeline {
                 echo 'Starting app with Docker Compose...'
                 sh '''
                     cd ${APP_DIR}
-                    docker compose down || true
-                    docker compose up -d --build
+                    docker-compose down || true
+                    docker-compose up -d --build
                     echo "Waiting for app to be ready..."
                     sleep 15
                     curl -f http://localhost:5000/health || exit 1
@@ -67,10 +67,13 @@ pipeline {
                 def jobName = env.JOB_NAME
                 def buildNum = env.BUILD_NUMBER
                 def buildStatus = currentBuild.currentResult
+
                 def pusherEmail = sh(
-                    script: "git log -1 --format='%ae'",
+                    script: "cd ${WORKSPACE} && git log -1 --pretty=format:'%ae'",
                     returnStdout: true
                 ).trim()
+
+                echo "Sending to: ${pusherEmail}"
 
                 emailext(
                     to: "${pusherEmail}",
@@ -80,7 +83,7 @@ pipeline {
                         <p><b>Job:</b> ${jobName}</p>
                         <p><b>Build Number:</b> ${buildNum}</p>
                         <p><b>Status:</b> ${buildStatus}</p>
-                        <p><b>Check full results:</b> 
+                        <p><b>Check full results:</b>
                            <a href="${env.BUILD_URL}">${env.BUILD_URL}</a>
                         </p>
                     """,
@@ -88,7 +91,7 @@ pipeline {
                     attachmentsPattern: 'test-results/test-results.xml'
                 )
             }
-            sh 'docker compose down || true'
+            sh 'docker-compose down || true'
         }
     }
 }
