@@ -5,7 +5,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 
 BASE_URL = "http://localhost:5000"
 
@@ -17,8 +16,7 @@ def get_driver():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
-
-    service = Service(ChromeDriverManager().install())
+    service = Service("/usr/bin/chromedriver")
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(3)
     return driver
@@ -29,14 +27,11 @@ class TodoAppTests(unittest.TestCase):
     def setUp(self):
         self.driver = get_driver()
         self.wait = WebDriverWait(self.driver, 10)
-        
-        # Navigate and clean the database before EVERY test to ensure isolation
         self.driver.get(BASE_URL)
         while True:
             delete_buttons = self.driver.find_elements(By.CLASS_NAME, "btn-delete")
             if not delete_buttons:
                 break
-            # Click the first delete button and wait for the page to refresh/DOM to update
             btn = delete_buttons[0]
             btn.click()
             self.wait.until(EC.staleness_of(btn))
@@ -44,18 +39,14 @@ class TodoAppTests(unittest.TestCase):
     def tearDown(self):
         self.driver.quit()
 
-    # helper
     def add_task(self, task):
         input_box = self.wait.until(
             EC.presence_of_element_located((By.ID, "todo-input"))
         )
         input_box.clear()
         input_box.send_keys(task)
-
         add_btn = self.driver.find_element(By.ID, "add-btn")
         add_btn.click()
-
-        # Wait for the add button to become stale (confirming page reload)
         self.wait.until(EC.staleness_of(add_btn))
 
     def test_01_page_loads(self):
@@ -82,17 +73,14 @@ class TodoAppTests(unittest.TestCase):
     def test_06_add_multiple_todos(self):
         self.driver.get(BASE_URL)
         tasks = ["Task Alpha", "Task Beta", "Task Gamma"]
-
         for t in tasks:
             self.add_task(t)
-
         page = self.driver.page_source
         for t in tasks:
             self.assertIn(t, page)
 
     def test_07_empty_input_no_add(self):
         self.driver.get(BASE_URL)
-        # Note: In a clean environment, before=0
         before = len(self.driver.find_elements(By.CLASS_NAME, "todo-item"))
         self.driver.find_element(By.ID, "add-btn").click()
         after = len(self.driver.find_elements(By.CLASS_NAME, "todo-item"))
@@ -102,72 +90,53 @@ class TodoAppTests(unittest.TestCase):
         self.driver.get(BASE_URL)
         self.add_task("Test Done Button")
         self.assertGreater(
-            len(self.driver.find_elements(By.CLASS_NAME, "btn-toggle")),
-            0
+            len(self.driver.find_elements(By.CLASS_NAME, "btn-toggle")), 0
         )
 
     def test_09_delete_button_exists(self):
         self.driver.get(BASE_URL)
         self.add_task("Test Delete Button")
         self.assertGreater(
-            len(self.driver.find_elements(By.CLASS_NAME, "btn-delete")),
-            0
+            len(self.driver.find_elements(By.CLASS_NAME, "btn-delete")), 0
         )
 
     def test_10_toggle_todo_done(self):
         self.driver.get(BASE_URL)
         self.add_task("Toggle me")
-
         btn = self.wait.until(
             EC.element_to_be_clickable((By.CLASS_NAME, "btn-toggle"))
         )
         btn.click()
-
-        # Wait for the page to reload before asserting
         self.wait.until(EC.staleness_of(btn))
-
         done_items = self.driver.find_elements(By.CSS_SELECTOR, "span.done")
         self.assertGreater(len(done_items), 0)
 
     def test_11_toggle_todo_undone(self):
         self.driver.get(BASE_URL)
         self.add_task("Toggle back")
-
-        # First click to mark as done
         btn = self.wait.until(
             EC.element_to_be_clickable((By.CLASS_NAME, "btn-toggle"))
         )
         btn.click()
         self.wait.until(EC.staleness_of(btn))
-
-        # Re-fetch the button from the new DOM before clicking again
         btn_undo = self.wait.until(
             EC.element_to_be_clickable((By.CLASS_NAME, "btn-toggle"))
         )
         btn_undo.click()
         self.wait.until(EC.staleness_of(btn_undo))
-
-        # With cleanup in setUp, there are no other 'done' items to interfere
         done_items = self.driver.find_elements(By.CSS_SELECTOR, "span.done")
         self.assertEqual(len(done_items), 0)
 
     def test_12_delete_todo(self):
         self.driver.get(BASE_URL)
-
         task = "Delete this task 99999"
         self.add_task(task)
-
         self.assertIn(task, self.driver.page_source)
-
         delete_btn = self.wait.until(
             EC.element_to_be_clickable((By.CLASS_NAME, "btn-delete"))
         )
         delete_btn.click()
-
-        # Wait for the delete button to disappear (confirming the navigation)
         self.wait.until(EC.staleness_of(delete_btn))
-
-        # With cleanup in setUp, there are no duplicate tasks to interfere
         self.assertNotIn(task, self.driver.page_source)
 
     def test_13_health_endpoint(self):
