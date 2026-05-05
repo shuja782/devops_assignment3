@@ -69,9 +69,13 @@ pipeline {
                 def buildStatus = currentBuild.currentResult
 
                 def pusherEmail = sh(
-                    script: "cd ${WORKSPACE} && git log -1 --pretty=format:'%ae'",
+                    script: "cd ${WORKSPACE} && git log -1 --format='%aE'",
                     returnStdout: true
                 ).trim()
+
+                if (!pusherEmail.contains('@') || pusherEmail.contains('.internal')) {
+                    pusherEmail = "shuja782@gmail.com"
+                }
 
                 echo "Sending to: ${pusherEmail}"
 
